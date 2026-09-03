@@ -4,21 +4,439 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#16181c">
-<title>Day B</title>
+<title>Day B · 胸 + 手臂</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#16181c; --bone:#ECE7DE; --muted:#8a8f99; --amber:#F5A623; }
+  :root{
+    --bg:#16181c; --surface:#20242b; --surface2:#2a2f38; --line:#333944;
+    --bone:#ECE7DE; --muted:#8a8f99;
+    --steel:#6fa0be; --amber:#F5A623; --amber-hot:#ff8a00; --done:#8bbf6e;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--bone);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;}
-  body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;padding:24px;}
-  h1{font-size:20px;margin:0 0 8px}
-  p{color:var(--muted);font-size:13px;margin:0 0 24px}
-  a{color:var(--amber);text-decoration:none;font-size:14px}
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;-webkit-font-smoothing:antialiased;}
+  body{padding:0 16px 120px;max-width:560px;margin:0 auto;}
+  input,textarea{font-family:inherit}
+
+  header{position:sticky;top:0;background:linear-gradient(var(--bg) 82%,transparent);padding:16px 0 10px;z-index:5;}
+  .toprow{display:flex;justify-content:space-between;align-items:flex-start}
+  .backlink{font-size:12px;color:var(--muted);text-decoration:none;display:inline-block;margin-bottom:6px}
+  .eyebrow{font-size:12px;letter-spacing:.28em;color:var(--muted);text-transform:uppercase;margin:0 0 2px}
+  .title{font-family:"Oswald";font-weight:600;font-size:33px;letter-spacing:.02em;margin:0;line-height:1}
+  .title .plus{color:var(--amber)}
+  .unit{display:flex;border:1px solid var(--line);border-radius:99px;overflow:hidden;flex:0 0 auto}
+  .unit button{background:none;border:none;color:var(--muted);font-family:"Oswald";font-weight:600;font-size:14px;padding:7px 13px}
+  .unit button.act{background:var(--amber);color:#16181c}
+  .metarow{display:flex;align-items:center;gap:10px;margin-top:14px}
+  .progresswrap{flex:1}
+  .progresslabel{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:5px}
+  .progresslabel b{color:var(--bone);font-family:"Oswald";font-weight:600;font-size:14px}
+  .bar{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}
+  .bar>i{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,var(--amber),var(--amber-hot));border-radius:99px;transition:transform .35s ease}
+  .hbtn{background:none;border:1px solid var(--line);color:var(--muted);font-size:12px;padding:8px 11px;border-radius:99px;flex:0 0 auto}
+  .hbtn:active{background:var(--surface)}
+  .hbtn.exp{border-color:var(--amber);color:var(--amber)}
+
+  .sec{margin:24px 0 12px;display:flex;align-items:center;gap:12px}
+  .sec .tag{font-family:"Oswald";font-weight:700;font-size:22px;letter-spacing:.05em;padding:2px 12px;border-radius:8px;line-height:1.4}
+  .sec.a .tag{background:rgba(245,166,35,.14);color:var(--amber)}
+  .sec.b .tag{background:rgba(111,160,190,.16);color:var(--steel)}
+  .sec .rule{flex:1;height:1px;background:var(--line)}
+  .sec .cnt{font-size:12px;color:var(--muted)}
+
+  .warm{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:13px 16px;margin-top:6px}
+  .warm+.warm{margin-top:10px}
+  .warm h3{margin:0 0 5px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .warm h3 span{color:var(--muted);font-weight:400;font-size:12px}
+  .warm p{margin:0;font-size:13px;line-height:1.55;color:var(--muted)}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:15px 15px 14px;margin-bottom:12px;transition:opacity .3s,border-color .3s}
+  .card.done{opacity:.55;border-color:var(--done)}
+  .card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .card .name{font-size:17px;font-weight:600;line-height:1.3}
+  .card .idx{font-family:"Oswald";font-weight:700;font-size:15px;flex:0 0 auto;width:20px;text-align:right}
+  .card.a .idx{color:var(--amber)} .card.b .idx{color:var(--steel)}
+  .meta{margin:7px 0 2px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font-size:12.5px;color:var(--muted)}
+  .meta .goal{color:var(--bone)} .meta .rest b{color:var(--amber);font-family:"Oswald";font-weight:600}
+  .meta .rest{margin-left:auto}
+
+  .cuebtn{margin-top:9px;background:none;border:1px solid var(--line);color:var(--muted);font-size:12.5px;padding:6px 11px;border-radius:8px;letter-spacing:.03em}
+  .cuebtn:active{background:var(--surface2)}
+  .detail{margin-top:10px;padding:11px 12px;background:var(--surface2);border-radius:10px;border-left:2px solid var(--amber)}
+  .card.b .detail{border-left-color:var(--steel)}
+  .detail.hide{display:none}
+  .drow{font-size:12.5px;line-height:1.6;color:var(--muted);margin:0 0 5px}
+  .drow:last-child{margin-bottom:0}
+  .drow .dl{color:var(--bone);font-weight:600;margin-right:5px}
+  .card.a .drow .dl{color:var(--amber)} .card.b .drow .dl{color:var(--steel)}
+
+  .setrow{display:grid;gap:8px;align-items:center;margin-top:10px}
+  .setrow.g4{grid-template-columns:20px 1fr 1fr 46px}
+  .setrow.g3{grid-template-columns:20px 1fr 46px}
+  .setrow .sn{font-family:"Oswald";font-weight:600;font-size:14px;color:var(--muted);text-align:center}
+  .field{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:10px;height:44px;overflow:hidden}
+  .field .stp{width:30px;height:100%;background:none;border:none;color:var(--muted);font-size:20px;font-family:"Oswald";flex:0 0 auto}
+  .field .stp:active{background:rgba(255,255,255,.06);color:var(--bone)}
+  .field input{flex:1;min-width:0;width:100%;background:none;border:none;color:var(--bone);text-align:center;font-family:"Oswald";font-weight:600;font-size:17px;padding:0;outline:none;font-variant-numeric:tabular-nums}
+  .field .u{font-size:11px;color:var(--muted);padding-right:9px;flex:0 0 auto}
+  .chk{height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface2);color:var(--muted);font-size:19px;display:flex;align-items:center;justify-content:center;transition:transform .08s,background .2s,color .2s,border-color .2s}
+  .chk:active{transform:scale(.92)}
+  .chk.on{background:var(--done);border-color:var(--done);color:#16181c}
+
+  /* rest overlay */
+  .overlay{position:fixed;inset:0;background:rgba(12,13,16,.93);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+  .overlay.show{display:flex}
+  .ovlabel{font-size:12px;letter-spacing:.3em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+  .ovexname{font-size:16px;margin-bottom:24px;max-width:280px}
+  .ring{position:relative;width:244px;height:244px}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .rem{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring .big{font-family:"Oswald";font-weight:700;font-size:76px;line-height:.9;color:var(--amber);font-variant-numeric:tabular-nums;text-shadow:0 0 26px rgba(255,138,0,.35)}
+  .ring .unit2{font-size:13px;letter-spacing:.25em;color:var(--muted);margin-top:8px;text-transform:uppercase}
+  .ovctrl{display:flex;gap:12px;margin-top:32px}
+  .ovbtn{border:1px solid var(--line);background:var(--surface);color:var(--bone);font-family:"Oswald";font-weight:600;font-size:17px;padding:14px 22px;border-radius:12px;min-width:74px}
+  .ovbtn:active{background:var(--surface2)}
+  .ovbtn.skip{background:var(--amber);color:#16181c;border-color:var(--amber)}
+  .ovnext{margin-top:24px;font-size:12.5px;color:var(--muted)} .ovnext b{color:var(--bone)}
+
+  /* export modal */
+  .modal{position:fixed;inset:0;background:rgba(12,13,16,.9);z-index:60;display:none;align-items:flex-end;justify-content:center;padding:0}
+  .modal.show{display:flex}
+  .sheet{background:var(--surface);border:1px solid var(--line);border-radius:18px 18px 0 0;width:100%;max-width:560px;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+  .sheet h3{margin:0 0 4px;font-size:16px}
+  .sheet p{margin:0 0 12px;font-size:12px;color:var(--muted)}
+  .sheet textarea{width:100%;height:210px;background:var(--bg);border:1px solid var(--line);border-radius:12px;color:var(--bone);font-size:13px;line-height:1.5;padding:12px;resize:none;font-variant-numeric:tabular-nums}
+  .mbtns{display:flex;gap:10px;margin-top:12px}
+  .mbtns button{flex:1;border-radius:12px;padding:14px;font-size:15px;font-weight:600;border:1px solid var(--line);background:var(--surface2);color:var(--bone)}
+  .mbtns .copy{background:var(--amber);color:#16181c;border-color:var(--amber)}
+
+  .footnote{text-align:center;color:var(--muted);font-size:12px;line-height:1.6;margin-top:24px;padding:0 6px}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-  <h1>Day B 內容準備中</h1>
-  <p>這個頁面之後會放 Day B 的訓練菜單。</p>
-  <a href="index.html">← 回訓練菜單</a>
+
+<header>
+  <div class="toprow">
+    <div><a class="backlink" href="index.html">‹ 選單</a><p class="eyebrow">Workout · Day B</p><h1 class="title osw">胸 <span class="plus">+</span> 手臂</h1></div>
+    <div class="unit">
+      <button id="uKg" onclick="setUnit('kg')">公斤</button>
+      <button id="uLb" onclick="setUnit('lb')">磅</button>
+    </div>
+  </div>
+  <div class="metarow">
+    <div class="progresswrap">
+      <div class="progresslabel"><span>今日進度</span><b><span id="pDone">0</span> / <span id="pTotal">0</span> 組</b></div>
+      <div class="bar"><i id="pBar"></i></div>
+    </div>
+    <button class="hbtn exp" onclick="openExp()">匯出文字</button>
+    <button class="hbtn" onclick="resetAll()">重設</button>
+  </div>
+</header>
+
+<div class="warm">
+  <h3>熱身 <span>5 分鐘</span></h3>
+  <p>肩繞環、輕重量臥推 1–2 組帶開；空手或彈力帶轉開二頭三頭與肩關節。</p>
+</div>
+<div class="warm">
+  <h3>重點提醒</h3>
+  <p>臥推是今天主項,前兩組留一點、穩穩在 8–12 下加重;三頭、二頭放最後拚力竭。</p>
+</div>
+
+<div class="sec a"><span class="tag osw">胸</span><span class="rule"></span><span class="cnt" id="cntA"></span></div>
+<div id="secA"></div>
+
+<div class="sec b"><span class="tag osw">手臂</span><span class="rule"></span><span class="cnt" id="cntB"></span></div>
+<div id="secB"></div>
+
+<p class="footnote">點「要領」看每個動作的細節；每組可用 −／＋ 或直接輸入。<br>收操後按「匯出文字」→ 複製貼回 Claude 幫你分析。</p>
+
+<div class="overlay" id="overlay">
+  <p class="ovlabel">休息中</p>
+  <p class="ovexname" id="ovEx">—</p>
+  <div class="ring">
+    <svg width="244" height="244" viewBox="0 0 244 244">
+      <circle cx="122" cy="122" r="110" fill="none" stroke="#2a2f38" stroke-width="10"/>
+      <circle id="ovRing" cx="122" cy="122" r="110" fill="none" stroke="url(#g)" stroke-width="10" stroke-linecap="round" stroke-dasharray="691.15" stroke-dashoffset="0"/>
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F5A623"/><stop offset="1" stop-color="#ff8a00"/></linearGradient></defs>
+    </svg>
+    <div class="rem"><div class="big" id="ovNum">90</div><div class="unit2">秒</div></div>
+  </div>
+  <div class="ovctrl">
+    <button class="ovbtn" onclick="bump(-15)">−15</button>
+    <button class="ovbtn skip" onclick="skipRest()">跳過</button>
+    <button class="ovbtn" onclick="bump(15)">＋15</button>
+  </div>
+  <p class="ovnext" id="ovNext"></p>
+</div>
+
+<div class="modal" id="expModal">
+  <div class="sheet">
+    <h3>今日數據</h3>
+    <p>複製後貼回 Claude，跟他說「幫我分析」即可。</p>
+    <textarea id="expText" readonly></textarea>
+    <div class="mbtns">
+      <button class="copy" onclick="copyExp()">複製</button>
+      <button onclick="closeExp()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LB=2.2046226;
+/* type: 'weight' 需輸入重量+次數 / 'bodyweight' 自重只記次數 / 'time' 只記秒數 */
+const CHEST=[
+  {n:"啞鈴臥推",type:"weight",loLb:20,hiLb:25,rLo:8,rHi:12,sets:4,rest:120,restLbl:"90–120″",
+   cues:["設定：躺平臥推椅（或地板），啞鈴起手在胸口外側，手腕對齊手肘正上方。",
+         "動作：往上推同時微內收，下放 2 秒回到胸口，不觸地彈震。",
+         "重點：今天主項，前兩組留一點力，抓穩節奏後段再加重打滿 8–12 下。",
+         "常見錯誤：手肘完全外開 90° 夾擠肩關節、拱腰借力。"]},
+  {n:"上斜啞鈴臥推",type:"weight",loLb:15,hiLb:20,rLo:10,rHi:12,sets:3,rest:90,restLbl:"75–90″",
+   cues:["設定：椅背調 30–45°，啞鈴起手於上胸外側。",
+         "動作：往上微內收推起，感受上胸出力，下放穩定不甩。",
+         "常見錯誤：椅背角度太高變前三角出力、頂端聳肩。"]},
+  {n:"啞鈴飛鳥",type:"weight",loLb:10,hiLb:15,rLo:12,rHi:15,sets:3,rest:60,restLbl:"60″",
+   cues:["設定：躺平、微屈肘固定角度不變，啞鈴在胸口正上方。",
+         "動作：往兩側畫弧下放到胸口有延展感，頂端夾胸 1 秒再推回。",
+         "常見錯誤：手肘角度跑掉變成臥推、下放過深壓迫肩關節。"]},
+];
+const ARM=[
+  {n:"過頭啞鈴三頭伸展",type:"weight",loLb:15,hiLb:25,rLo:10,rHi:15,sets:3,rest:60,restLbl:"60″",
+   cues:["設定：坐姿或站姿，雙手捧一顆啞鈴舉高，上臂貼耳鎖住不動。",
+         "動作：只有前臂往後下放到後腦，再伸直，全程上臂不晃動。",
+         "常見錯誤：上臂前後擺動借力、下放過猛拉傷肘關節。"]},
+  {n:"板凳撐體",type:"bodyweight",repNote:"力竭",rLo:8,rHi:15,sets:3,rest:60,restLbl:"60″",
+   cues:["設定：雙手撐凳邊、腳往前伸，臀部貼近椅緣往下蹲。",
+         "動作：手肘往後彎曲下降，再撐直；太輕就放慢離心到 3 秒。",
+         "常見錯誤：肩膀往上聳、下蹲過深壓迫肩關節前側。"]},
+  {n:"啞鈴彎舉",type:"weight",loLb:15,hiLb:20,rLo:10,rHi:12,sets:3,rest:60,restLbl:"60″",
+   cues:["設定：站姿，手肘貼身固定，掌心朝前。",
+         "動作：彎舉到頂端擠肱二頭 1 秒，下放控制不甩動。",
+         "常見錯誤：借用腰部或肩膀晃動、手肘往前跑。"]},
+  {n:"錘式彎舉",type:"weight",loLb:15,hiLb:20,rLo:10,rHi:12,sets:3,rest:60,restLbl:"45–60″",
+   cues:["設定：站姿，掌心相對（鎚式握法），手肘貼身。",
+         "動作：彎舉上來頂端停頓，緩慢下放，練肱肌與前臂。",
+         "常見錯誤：手肘外開、用手腕代償轉動。"]},
+];
+const PROGRESSION="\n—— 進階規則：連兩次所有組打到區間上限→加 5 磅；到 25 磅封頂改強度技巧（慢離心／頂端停／末組遞減／休息縮短）。請依此分析並建議下次調整。";
+
+let unit='lb';
+const ALL=[], state=[];
+function kgDefault(lb){ return Math.round(lb/LB*2)/2; }
+
+function buildSection(list,mount,cls){
+  list.forEach((ex,i)=>{
+    const gi=ALL.length; ALL.push(ex);
+    const rows=[]; state.push(rows);
+    let cuesHtml='';
+    ex.cues.forEach(c=>{ const k=c.indexOf('：');
+      cuesHtml+=`<div class="drow"><span class="dl">${c.slice(0,k)}</span>${c.slice(k+1)}</div>`; });
+    let sets='';
+    for(let s=0;s<ex.sets;s++){
+      if(ex.type==='weight'){ rows.push({kg:kgDefault(ex.loLb),reps:ex.rLo,done:false});
+        sets+=`<div class="setrow g4">
+          <div class="sn">${s+1}</div>
+          <div class="field"><button class="stp" onclick="stepW(${gi},${s},-1)">−</button>
+            <input id="w${gi}_${s}" inputmode="decimal" onchange="onW(${gi},${s},this)">
+            <span class="u" id="wu${gi}_${s}">磅</span>
+            <button class="stp" onclick="stepW(${gi},${s},1)">＋</button></div>
+          <div class="field"><button class="stp" onclick="stepR(${gi},${s},-1)">−</button>
+            <input id="r${gi}_${s}" inputmode="numeric" onchange="onR(${gi},${s},this)">
+            <span class="u">下</span>
+            <button class="stp" onclick="stepR(${gi},${s},1)">＋</button></div>
+          <button class="chk" id="c${gi}_${s}" onclick="toggle(${gi},${s})">✓</button>
+        </div>`;
+      } else if(ex.type==='bodyweight'){ rows.push({reps:ex.rLo,done:false});
+        sets+=`<div class="setrow g3">
+          <div class="sn">${s+1}</div>
+          <div class="field"><button class="stp" onclick="stepR(${gi},${s},-1)">−</button>
+            <input id="r${gi}_${s}" inputmode="numeric" onchange="onR(${gi},${s},this)">
+            <span class="u">下</span>
+            <button class="stp" onclick="stepR(${gi},${s},1)">＋</button></div>
+          <button class="chk" id="c${gi}_${s}" onclick="toggle(${gi},${s})">✓</button>
+        </div>`;
+      } else { rows.push({sec:ex.tLo,done:false});
+        sets+=`<div class="setrow g3">
+          <div class="sn">${s+1}</div>
+          <div class="field"><button class="stp" onclick="stepSec(${gi},${s},-5)">−</button>
+            <input id="t${gi}_${s}" inputmode="numeric" onchange="onSec(${gi},${s},this)">
+            <span class="u">秒</span>
+            <button class="stp" onclick="stepSec(${gi},${s},5)">＋</button></div>
+          <button class="chk" id="c${gi}_${s}" onclick="toggle(${gi},${s})">✓</button>
+        </div>`;
+      }
+    }
+    const card=document.createElement('div');
+    card.className='card '+cls; card.id='card'+gi;
+    let metaHtml;
+    if(ex.type==='weight'){
+      metaHtml=`<span class="goal">目標 <span id="g${gi}"></span></span><span>${ex.sets} 組 × ${ex.rLo}–${ex.rHi} 下</span><span class="rest">休 <b>${ex.restLbl}</b></span>`;
+    } else if(ex.type==='bodyweight'){
+      metaHtml=`<span class="goal">自重</span><span>${ex.sets} 組 × ${ex.rLo}–${ex.rHi} 下${ex.repNote?'（'+ex.repNote+'）':''}</span><span class="rest">休 <b>${ex.restLbl}</b></span>`;
+    } else {
+      metaHtml=`<span class="goal">自重</span><span>${ex.sets} 組 × ${ex.tLo}–${ex.tHi} 秒</span><span class="rest">休 <b>${ex.restLbl}</b></span>`;
+    }
+    card.innerHTML=`<div class="top"><div class="name">${ex.n}</div><div class="idx osw">${i+1}</div></div>
+      <div class="meta">${metaHtml}</div>
+      <button class="cuebtn" onclick="tgCue(${gi})" id="cb${gi}">要領 ▾</button>
+      <div class="detail hide" id="d${gi}">${cuesHtml}</div>
+      ${sets}`;
+    mount.appendChild(card);
+  });
+}
+buildSection(CHEST,document.getElementById('secA'),'a');
+buildSection(ARM,document.getElementById('secB'),'b');
+document.getElementById('cntA').textContent=CHEST.length+' 動作 · '+CHEST.reduce((a,e)=>a+e.sets,0)+' 組';
+document.getElementById('cntB').textContent=ARM.length+' 動作 · '+ARM.reduce((a,e)=>a+e.sets,0)+' 組';
+
+const TOTAL=state.reduce((a,r)=>a+r.length,0);
+document.getElementById('pTotal').textContent=TOTAL;
+
+function tgCue(gi){
+  const d=document.getElementById('d'+gi), b=document.getElementById('cb'+gi);
+  const open=d.classList.toggle('hide')===false;
+  b.textContent = open ? '要領 ▴' : '要領 ▾';
+}
+
+function showW(kg){ return unit==='kg' ? trim(Math.round(kg*2)/2) : Math.round(kg*LB); }
+function trim(v){ return Number.isInteger(v)?String(v):v.toFixed(1); }
+function goalStr(ex){ if(unit==='kg'){ const a=kgDefault(ex.loLb),b=kgDefault(ex.hiLb);
+    return (a===b?trim(a):trim(a)+'–'+trim(b))+' 公斤'; }
+  return (ex.loLb===ex.hiLb?ex.loLb:ex.loLb+'–'+ex.hiLb)+' 磅'; }
+function renderAll(){
+  document.getElementById('uKg').classList.toggle('act',unit==='kg');
+  document.getElementById('uLb').classList.toggle('act',unit==='lb');
+  ALL.forEach((ex,gi)=>{
+    if(ex.type==='weight'){ document.getElementById('g'+gi).textContent=goalStr(ex);
+      state[gi].forEach((set,s)=>{ document.getElementById('w'+gi+'_'+s).value=showW(set.kg);
+        document.getElementById('wu'+gi+'_'+s).textContent=(unit==='kg'?'公斤':'磅');
+        document.getElementById('r'+gi+'_'+s).value=set.reps; }); }
+    else if(ex.type==='bodyweight'){ state[gi].forEach((set,s)=>{ document.getElementById('r'+gi+'_'+s).value=set.reps; }); }
+    else { state[gi].forEach((set,s)=>{ document.getElementById('t'+gi+'_'+s).value=set.sec; }); }
+  });
+}
+function setUnit(u){ unit=u; renderAll(); }
+
+function onW(gi,s,el){ let v=parseFloat(el.value);
+  if(isNaN(v)||v<0){ el.value=showW(state[gi][s].kg); return; }
+  state[gi][s].kg = unit==='kg' ? v : v/LB; el.value=showW(state[gi][s].kg); }
+function stepW(gi,s,d){ const set=state[gi][s];
+  if(unit==='kg'){ set.kg=Math.max(0,Math.round((set.kg+d*0.5)*2)/2); }
+  else{ let lb=Math.max(0,Math.round(set.kg*LB)+d); set.kg=lb/LB; }
+  document.getElementById('w'+gi+'_'+s).value=showW(set.kg); }
+function onR(gi,s,el){ let v=parseInt(el.value,10);
+  if(isNaN(v)||v<0){ el.value=state[gi][s].reps; return; } state[gi][s].reps=v; }
+function stepR(gi,s,d){ const set=state[gi][s]; set.reps=Math.max(0,set.reps+d);
+  document.getElementById('r'+gi+'_'+s).value=set.reps; }
+function onSec(gi,s,el){ let v=parseInt(el.value,10);
+  if(isNaN(v)||v<0){ el.value=state[gi][s].sec; return; } state[gi][s].sec=v; }
+function stepSec(gi,s,d){ const set=state[gi][s]; set.sec=Math.max(0,set.sec+d);
+  document.getElementById('t'+gi+'_'+s).value=set.sec; }
+
+function toggle(gi,s){ const set=state[gi][s]; set.done=!set.done;
+  document.getElementById('c'+gi+'_'+s).classList.toggle('on',set.done);
+  document.getElementById('card'+gi).classList.toggle('done',state[gi].every(x=>x.done));
+  updateProgress(); if(set.done) startRest(gi); }
+function updateProgress(){ const done=state.reduce((a,r)=>a+r.filter(x=>x.done).length,0);
+  document.getElementById('pDone').textContent=done;
+  document.getElementById('pBar').style.transform='scaleX('+(done/TOTAL)+')'; }
+
+/* rest */
+let timer=null,remain=0,curTotal=0; const ringLen=691.15;
+const ov=document.getElementById('overlay'),ovNum=document.getElementById('ovNum'),
+      ovRing=document.getElementById('ovRing'),ovEx=document.getElementById('ovEx'),ovNext=document.getElementById('ovNext');
+function startRest(gi){ const ex=ALL[gi]; remain=ex.rest; curTotal=ex.rest; ovEx.textContent=ex.n;
+  const nx=nextPending(gi); ovNext.innerHTML=nx?`下一組：<b>${nx}</b>`:`最後一組，收操！`;
+  ov.classList.add('show'); renderRing(); clearInterval(timer);
+  timer=setInterval(()=>{ remain--; if(remain<=3&&remain>0)beep(880,.12);
+    if(remain<=0){finishRest();return;} renderRing(); },1000); }
+function renderRing(){ ovNum.textContent=remain; ovRing.style.strokeDashoffset=ringLen*(1-remain/curTotal); }
+function bump(d){ remain=Math.max(1,remain+d); curTotal=Math.max(curTotal,remain); renderRing(); }
+function skipRest(){ clearInterval(timer); ov.classList.remove('show'); }
+function finishRest(){ clearInterval(timer);
+  beep(660,.18);setTimeout(()=>beep(880,.18),200);setTimeout(()=>beep(1175,.32),400);
+  ovNum.textContent=0; ovRing.style.strokeDashoffset=ringLen; setTimeout(()=>ov.classList.remove('show'),650); }
+function nextPending(gi){ if(!state[gi].every(x=>x.done)) return ALL[gi].n+' 還有組';
+  for(let k=gi+1;k<ALL.length;k++){ if(!state[k].every(x=>x.done)) return ALL[k].n; } return null; }
+
+/* audio */
+let actx=null;
+function beep(f,d){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;o.type='sine';
+  o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(.001,actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.4,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+document.body.addEventListener('touchstart',()=>{if(actx&&actx.state==='suspended')actx.resume();});
+
+/* export */
+function buildExport(){
+  const d=new Date(), pad=n=>String(n).padStart(2,'0');
+  const date=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const uLabel = unit==='kg'?'公斤':'磅';
+  let t=`Day B · 胸+手臂｜${date}\n單位：${uLabel}、單邊（每手一顆）\n`;
+  const sec=(title,arr,base)=>{ t+=`\n【${title}】\n`;
+    arr.forEach((ex,i)=>{ const gi=base+i;
+      const done=state[gi].filter(x=>x.done);
+      let logged;
+      if(!done.length) logged='（未記錄）';
+      else if(ex.type==='weight') logged=done.map(x=>`${showW(x.kg)}/${x.reps}`).join('、');
+      else if(ex.type==='bodyweight') logged=done.map(x=>`${x.reps}下`).join('、');
+      else logged=done.map(x=>`${x.sec}秒`).join('、');
+      const target = ex.type==='time' ? `目標 ${ex.tLo}–${ex.tHi} 秒` : `目標 ${ex.rLo}–${ex.rHi} 下`;
+      t+=`${i+1} ${ex.n}（${target}）：${logged}\n`; }); };
+  sec('胸',CHEST,0); sec('手臂',ARM,CHEST.length);
+  t+=PROGRESSION;
+  return t;
+}
+function openExp(){ document.getElementById('expText').value=buildExport();
+  document.getElementById('expModal').classList.add('show'); }
+function closeExp(){ document.getElementById('expModal').classList.remove('show'); }
+function copyExp(){ const ta=document.getElementById('expText'); const txt=ta.value;
+  const done=()=>{ const b=document.querySelector('.mbtns .copy'); const o=b.textContent;
+    b.textContent='已複製 ✓'; setTimeout(()=>b.textContent=o,1400); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done,()=>{ta.select();document.execCommand('copy');done();}); }
+  else { ta.select(); ta.setSelectionRange(0,99999); document.execCommand('copy'); done(); } }
+
+function resetAll(){ if(!confirm('清空今天所有已完成的組數？（重量與次數會保留）')) return;
+  state.forEach((rows,gi)=>{ rows.forEach((set,s)=>{ set.done=false;
+    document.getElementById('c'+gi+'_'+s).classList.remove('on'); });
+    document.getElementById('card'+gi).classList.remove('done'); });
+  updateProgress(); skipRest(); }
+
+/* ---- 暫存：localStorage 自動存檔 ---- */
+const SKEY='dayB_v1';
+function saveState(){ try{
+  localStorage.setItem(SKEY,JSON.stringify({unit,
+    data:state.map(rows=>rows.map(x=>({kg:x.kg,reps:x.reps,sec:x.sec,done:x.done})))}));
+}catch(e){} }
+function loadState(){ try{
+  const raw=localStorage.getItem(SKEY); if(!raw) return false;
+  const p=JSON.parse(raw); if(!p||!Array.isArray(p.data)||p.data.length!==state.length) return false;
+  if(p.unit) unit=p.unit;
+  p.data.forEach((rows,gi)=>{ if(!Array.isArray(rows)||rows.length!==state[gi].length) return;
+    rows.forEach((x,s)=>{ if(!x) return;
+      if(typeof x.kg==='number') state[gi][s].kg=x.kg;
+      if(typeof x.reps==='number') state[gi][s].reps=x.reps;
+      if(typeof x.sec==='number') state[gi][s].sec=x.sec;
+      state[gi][s].done=!!x.done; }); });
+  return true;
+}catch(e){ return false; } }
+function refreshUI(){ renderAll();
+  ALL.forEach((ex,gi)=>{ state[gi].forEach((set,s)=>{
+      document.getElementById('c'+gi+'_'+s).classList.toggle('on',set.done); });
+    document.getElementById('card'+gi).classList.toggle('done',state[gi].every(x=>x.done)); });
+  updateProgress(); }
+
+if(!loadState()){ /* 沒有存檔，用預設值 */ }
+refreshUI(); saveState();
+
+document.addEventListener('change',saveState);
+document.addEventListener('click',()=>setTimeout(saveState,0));
+window.addEventListener('pagehide',saveState);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) saveState(); });
+</script>
 </body>
 </html>

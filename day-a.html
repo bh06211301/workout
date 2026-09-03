@@ -24,6 +24,7 @@
   header{position:sticky;top:0;background:linear-gradient(var(--bg) 82%,transparent);padding:16px 0 10px;z-index:5;}
   .toprow{display:flex;justify-content:space-between;align-items:flex-start}
   .eyebrow{font-size:12px;letter-spacing:.28em;color:var(--muted);text-transform:uppercase;margin:0 0 2px}
+  .backlink{font-size:12px;color:var(--muted);text-decoration:none;display:inline-block;margin-bottom:6px}
   .title{font-family:"Oswald";font-weight:600;font-size:33px;letter-spacing:.02em;margin:0;line-height:1}
   .title .plus{color:var(--amber)}
   .unit{display:flex;border:1px solid var(--line);border-radius:99px;overflow:hidden;flex:0 0 auto}
@@ -117,7 +118,7 @@
 
 <header>
   <div class="toprow">
-    <div><p class="eyebrow">Workout · Day A</p><h1 class="title osw">肩 <span class="plus">+</span> 背</h1></div>
+    <div><a class="backlink" href="index.html">‹ 選單</a><p class="eyebrow">Workout · Day A</p><h1 class="title osw">肩 <span class="plus">+</span> 背</h1></div>
     <div class="unit">
       <button id="uKg" onclick="setUnit('kg')">公斤</button>
       <button id="uLb" onclick="setUnit('lb')">磅</button>
