@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#16181c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
 <title>Day C · 腿 + 核心</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,6 +42,9 @@
   .hbtn{background:none;border:1px solid var(--line);color:var(--muted);font-size:12px;padding:8px 11px;border-radius:99px;flex:0 0 auto}
   .hbtn:active{background:var(--surface)}
   .hbtn.exp{border-color:var(--amber);color:var(--amber)}
+  .pushrow{margin-top:8px}
+  .pushbtn{width:100%;text-align:center;border-radius:10px;padding:9px 11px}
+  .pushbtn.on{border-color:var(--done);color:var(--done)}
 
   .sec{margin:24px 0 12px;display:flex;align-items:center;gap:12px}
   .sec .tag{font-family:"Oswald";font-weight:700;font-size:22px;letter-spacing:.05em;padding:2px 12px;border-radius:8px;line-height:1.4}
@@ -135,6 +141,7 @@
     <button class="hbtn exp" onclick="openExp()">匯出文字</button>
     <button class="hbtn" onclick="resetAll()">重設</button>
   </div>
+  <div class="pushrow"><button class="hbtn pushbtn" id="pushBtn" onclick="enablePush()">🔔 開啟休息提醒通知</button></div>
 </header>
 
 <div class="warm">
@@ -353,7 +360,10 @@ function startRest(gi){ const ex=ALL[gi]; remain=ex.rest; curTotal=ex.rest; ovEx
   const nx=nextPending(gi); ovNext.innerHTML=nx?`下一組：<b>${nx}</b>`:`最後一組，收操！`;
   ov.classList.add('show'); renderRing(); clearInterval(timer);
   timer=setInterval(()=>{ remain--; if(remain<=3&&remain>0)beep(880,.12);
-    if(remain<=0){finishRest();return;} renderRing(); },1000); }
+    if(remain<=0){finishRest();return;} renderRing(); },1000);
+  schedulePush(ex.rest,ex.n,pushNextLabel(gi)); }
+function pushNextLabel(gi){ if(!state[gi].every(x=>x.done)) return ALL[gi].n;
+  for(let k=gi+1;k<ALL.length;k++){ if(!state[k].every(x=>x.done)) return ALL[k].n; } return '收操完成'; }
 function renderRing(){ ovNum.textContent=remain; ovRing.style.strokeDashoffset=ringLen*(1-remain/curTotal); }
 function bump(d){ remain=Math.max(1,remain+d); curTotal=Math.max(curTotal,remain); renderRing(); }
 function skipRest(){ clearInterval(timer); ov.classList.remove('show'); }
@@ -371,6 +381,49 @@ function beep(f,d){try{actx=actx||new(window.AudioContext||window.webkitAudioCon
   g.gain.exponentialRampToValueAtTime(.4,actx.currentTime+.02);
   g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.start();o.stop(actx.currentTime+d);}catch(e){}}
 document.body.addEventListener('touchstart',()=>{if(actx&&actx.state==='suspended')actx.resume();});
+
+/* push notification（休息倒數提醒，鎖屏/切到別的 App 也收得到；iPhone 需先加入主畫面） */
+const PUSH_API='https://workout-push.bh06211301.workers.dev';
+const VAPID_PUBLIC_KEY='BCqnaEpQEs6alLXynqNyAyjEjuZpAZ4V8ytjJY95y_AlJ12rWsPklHbLBzY-2HCIw0WUx5cipAIn8SdO9C7mhnw';
+let pushSub=null;
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64); const arr=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+function setPushBtnOn(){ const b=document.getElementById('pushBtn');
+  b.textContent='🔔 休息提醒通知：已開啟'; b.classList.add('on'); }
+async function setupPush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)) return;
+  try{ const reg=await navigator.serviceWorker.register('sw.js');
+    const existing=await reg.pushManager.getSubscription();
+    if(existing){ pushSub=existing.toJSON(); setPushBtnOn(); }
+  }catch(e){}
+}
+async function enablePush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){
+    alert('這台裝置/瀏覽器不支援推播通知。\n\niPhone 請先用 Safari 分享 → 加入主畫面，改從主畫面圖示打開這個 App，才能開啟鎖屏通知。');
+    return;
+  }
+  if(pushSub) return;
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted') return;
+    const reg=await navigator.serviceWorker.register('sw.js');
+    const sub=await reg.pushManager.subscribe({ userVisibleOnly:true,
+      applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY) });
+    pushSub=sub.toJSON(); setPushBtnOn();
+  }catch(e){ console.error(e); alert('開啟通知失敗，請稍後再試一次。'); }
+}
+function schedulePush(restSeconds,exerciseName,nextLabel){
+  if(!pushSub) return;
+  fetch(PUSH_API+'/schedule-rest',{ method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ subscription:pushSub, restSeconds, exerciseName, nextLabel }) }).catch(()=>{});
+}
+setupPush();
+
 
 /* export */
 function buildExport(){

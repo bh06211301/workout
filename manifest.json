@@ -1,0 +1,9 @@
+{
+  "name": "訓練菜單",
+  "short_name": "訓練菜單",
+  "start_url": "index.html",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#16181c",
+  "theme_color": "#16181c"
+}

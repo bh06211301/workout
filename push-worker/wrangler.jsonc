@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "workout-push",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "VAPID_PUBLIC_KEY": "BCqnaEpQEs6alLXynqNyAyjEjuZpAZ4V8ytjJY95y_AlJ12rWsPklHbLBzY-2HCIw0WUx5cipAIn8SdO9C7mhnw",
+    "VAPID_SUBJECT": "mailto:bh06211302@gmail.com",
+    "ALLOWED_ORIGIN": "https://bh06211301.github.io"
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "REST_TIMER", "class_name": "RestTimer" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["RestTimer"] }
+  ]
+}
