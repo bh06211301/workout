@@ -353,23 +353,29 @@ function updateProgress(){ const done=state.reduce((a,r)=>a+r.filter(x=>x.done).
   document.getElementById('pBar').style.transform='scaleX('+(done/TOTAL)+')'; }
 
 /* rest */
-let timer=null,remain=0,curTotal=0; const ringLen=691.15;
+let timer=null,restEndAt=0,curTotal=0,lastBeepSec=-1,activeJobId=null; const ringLen=691.15;
 const ov=document.getElementById('overlay'),ovNum=document.getElementById('ovNum'),
       ovRing=document.getElementById('ovRing'),ovEx=document.getElementById('ovEx'),ovNext=document.getElementById('ovNext');
-function startRest(gi){ const ex=ALL[gi]; remain=ex.rest; curTotal=ex.rest; ovEx.textContent=ex.n;
+function computeRemain(){ return Math.max(0,Math.ceil((restEndAt-Date.now())/1000)); }
+function startRest(gi){ const ex=ALL[gi]; if(activeJobId) cancelPush();
+  restEndAt=Date.now()+ex.rest*1000; curTotal=ex.rest; ovEx.textContent=ex.n;
   const nx=nextPending(gi); ovNext.innerHTML=nx?`下一組：<b>${nx}</b>`:`最後一組，收操！`;
-  ov.classList.add('show'); renderRing(); clearInterval(timer);
-  timer=setInterval(()=>{ remain--; if(remain<=3&&remain>0)beep(880,.12);
-    if(remain<=0){finishRest();return;} renderRing(); },1000);
+  ov.classList.add('show'); lastBeepSec=-1; clearInterval(timer); tickRest();
+  timer=setInterval(tickRest,1000);
   schedulePush(ex.rest,ex.n,pushNextLabel(gi)); }
+function tickRest(){ const remain=computeRemain();
+  if(remain<=3&&remain>0&&remain!==lastBeepSec){ beep(880,.12); lastBeepSec=remain; }
+  renderRing(remain); if(remain<=0) finishRest(); }
 function pushNextLabel(gi){ if(!state[gi].every(x=>x.done)) return ALL[gi].n;
   for(let k=gi+1;k<ALL.length;k++){ if(!state[k].every(x=>x.done)) return ALL[k].n; } return '收操完成'; }
-function renderRing(){ ovNum.textContent=remain; ovRing.style.strokeDashoffset=ringLen*(1-remain/curTotal); }
-function bump(d){ remain=Math.max(1,remain+d); curTotal=Math.max(curTotal,remain); renderRing(); }
-function skipRest(){ clearInterval(timer); ov.classList.remove('show'); }
-function finishRest(){ clearInterval(timer);
+function renderRing(remain){ ovNum.textContent=remain; ovRing.style.strokeDashoffset=ringLen*(1-remain/curTotal); }
+function bump(d){ restEndAt+=d*1000; const remain=computeRemain(); curTotal=Math.max(curTotal,remain); renderRing(remain);
+  reschedulePush(d); }
+function skipRest(){ clearInterval(timer); ov.classList.remove('show'); cancelPush(); }
+function finishRest(){ clearInterval(timer); activeJobId=null;
   beep(660,.18);setTimeout(()=>beep(880,.18),200);setTimeout(()=>beep(1175,.32),400);
   ovNum.textContent=0; ovRing.style.strokeDashoffset=ringLen; setTimeout(()=>ov.classList.remove('show'),650); }
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&ov.classList.contains('show')) tickRest(); });
 function nextPending(gi){ if(!state[gi].every(x=>x.done)) return ALL[gi].n+' 還有組';
   for(let k=gi+1;k<ALL.length;k++){ if(!state[k].every(x=>x.done)) return ALL[k].n; } return null; }
 
@@ -418,9 +424,21 @@ async function enablePush(){
   }catch(e){ console.error(e); alert('開啟通知失敗，請稍後再試一次。'); }
 }
 function schedulePush(restSeconds,exerciseName,nextLabel){
+  activeJobId=null;
   if(!pushSub) return;
   fetch(PUSH_API+'/schedule-rest',{ method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ subscription:pushSub, restSeconds, exerciseName, nextLabel }) }).catch(()=>{});
+    body:JSON.stringify({ subscription:pushSub, restSeconds, exerciseName, nextLabel }) })
+    .then(r=>r.json()).then(d=>{ if(d&&d.id) activeJobId=d.id; }).catch(()=>{});
+}
+function reschedulePush(deltaSeconds){
+  if(!activeJobId) return;
+  fetch(PUSH_API+'/reschedule-rest',{ method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ id:activeJobId, deltaSeconds }) }).catch(()=>{});
+}
+function cancelPush(){
+  if(!activeJobId) return; const id=activeJobId; activeJobId=null;
+  fetch(PUSH_API+'/cancel-rest',{ method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ id }) }).catch(()=>{});
 }
 setupPush();
 

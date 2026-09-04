@@ -16,8 +16,8 @@ interface PushSubscriptionJSON {
 
 interface RestJob {
   subscription: PushSubscriptionJSON;
-  warnAt: number;
   doneAt: number;
+  warned: boolean;
   exerciseName: string;
   nextLabel: string;
 }
@@ -30,10 +30,34 @@ function corsHeaders(env: Env): Record<string, string> {
   };
 }
 
+const WARN_LEAD_MS = 10_000;
+
+function alarmTimeFor(job: RestJob): number {
+  return job.warned ? job.doneAt : job.doneAt - WARN_LEAD_MS;
+}
+
 export class RestTimer extends DurableObject<Env> {
-  async schedule(job: RestJob): Promise<void> {
+  async schedule(job: Omit<RestJob, "warned">): Promise<void> {
+    const now = Date.now();
+    const full: RestJob = { ...job, warned: job.doneAt - now <= WARN_LEAD_MS };
+    await this.ctx.storage.put("job", full);
+    await this.ctx.storage.setAlarm(Math.max(now + 500, alarmTimeFor(full)));
+  }
+
+  async reschedule(deltaSeconds: number): Promise<{ ok: boolean }> {
+    const job = await this.ctx.storage.get<RestJob>("job");
+    if (!job) return { ok: false };
+    const now = Date.now();
+    job.doneAt = Math.max(now + 1000, job.doneAt + deltaSeconds * 1000);
+    job.warned = job.doneAt - now <= WARN_LEAD_MS;
     await this.ctx.storage.put("job", job);
-    await this.ctx.storage.setAlarm(job.warnAt);
+    await this.ctx.storage.setAlarm(Math.max(now + 500, alarmTimeFor(job)));
+    return { ok: true };
+  }
+
+  async cancel(): Promise<void> {
+    await this.ctx.storage.deleteAlarm();
+    await this.ctx.storage.deleteAll();
   }
 
   async alarm(): Promise<void> {
@@ -46,15 +70,14 @@ export class RestTimer extends DurableObject<Env> {
       this.env.VAPID_PRIVATE_KEY,
     );
 
-    const now = Date.now();
-    const isWarnPhase = now < job.doneAt - 2000;
-
     try {
-      if (isWarnPhase) {
+      if (!job.warned) {
         await webpush.sendNotification(
           job.subscription,
           JSON.stringify({ title: "還有 10 秒", body: `準備：${job.exerciseName}` }),
         );
+        job.warned = true;
+        await this.ctx.storage.put("job", job);
         await this.ctx.storage.setAlarm(job.doneAt);
       } else {
         await webpush.sendNotification(
@@ -65,8 +88,7 @@ export class RestTimer extends DurableObject<Env> {
       }
     } catch (err) {
       console.error("push send failed", err);
-      if (isWarnPhase) await this.ctx.storage.setAlarm(job.doneAt);
-      else await this.ctx.storage.deleteAll();
+      await this.ctx.storage.deleteAll();
     }
   }
 }
@@ -94,20 +116,34 @@ export default {
         return Response.json({ error: "invalid body" }, { status: 400, headers });
       }
 
-      const now = Date.now();
-      const doneAt = now + body.restSeconds * 1000;
-      const warnAt = Math.max(now + 1000, doneAt - 10000);
-
+      const doneAt = Date.now() + body.restSeconds * 1000;
       const id = env.REST_TIMER.newUniqueId();
       const stub = env.REST_TIMER.get(id);
       await stub.schedule({
         subscription: body.subscription,
-        warnAt,
         doneAt,
         exerciseName: body.exerciseName,
         nextLabel: body.nextLabel,
       });
 
+      return Response.json({ ok: true, id: id.toString() }, { headers });
+    }
+
+    if (url.pathname === "/reschedule-rest" && req.method === "POST") {
+      const body = await req.json<{ id: string; deltaSeconds: number }>();
+      if (!body.id || typeof body.deltaSeconds !== "number") {
+        return Response.json({ error: "invalid body" }, { status: 400, headers });
+      }
+      const stub = env.REST_TIMER.get(env.REST_TIMER.idFromString(body.id));
+      const result = await stub.reschedule(body.deltaSeconds);
+      return Response.json(result, { headers });
+    }
+
+    if (url.pathname === "/cancel-rest" && req.method === "POST") {
+      const body = await req.json<{ id: string }>();
+      if (!body.id) return Response.json({ error: "invalid body" }, { status: 400, headers });
+      const stub = env.REST_TIMER.get(env.REST_TIMER.idFromString(body.id));
+      await stub.cancel();
       return Response.json({ ok: true }, { headers });
     }
 
